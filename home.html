@@ -5,30 +5,76 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mini WhatsApp Clone</title>
 
-  <!-- Firebase -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
 
   <style>
     * { box-sizing: border-box; font-family: Arial, sans-serif; }
     body { margin: 0; background: #ece5dd; }
 
-    .auth, .chat { max-width: 500px; margin: auto; height: 100vh; background: #fff; display: none; flex-direction: column; }
+    .auth, .chat {
+      max-width: 500px;
+      margin: auto;
+      height: 100vh;
+      background: #fff;
+      display: none;
+      flex-direction: column;
+    }
 
     .auth { padding: 20px; }
-    input, button { padding: 10px; margin: 8px 0; width: 100%; }
 
-    header { background: #075e54; color: white; padding: 12px; text-align: center; }
+    input, button {
+      padding: 10px;
+      margin: 8px 0;
+      width: 100%;
+    }
 
-    .messages { flex: 1; padding: 10px; overflow-y: auto; }
-    .msg { margin: 6px 0; padding: 8px; border-radius: 8px; max-width: 75%; }
-    .me { background: #dcf8c6; margin-left: auto; }
-    .other { background: #f1f0f0; }
-    .time { font-size: 10px; color: #555; text-align: right; }
+    header {
+      background: #075e54;
+      color: white;
+      padding: 12px;
+      text-align: center;
+      font-weight: bold;
+    }
 
-    footer { display: flex; padding: 8px; border-top: 1px solid #ddd; }
+    .messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+    }
+
+    .msg {
+      margin: 6px 0;
+      padding: 8px;
+      border-radius: 8px;
+      max-width: 75%;
+      word-wrap: break-word;
+    }
+
+    .me {
+      background: #dcf8c6;
+      margin-left: auto;
+    }
+
+    .other {
+      background: #f1f0f0;
+    }
+
+    .time {
+      font-size: 10px;
+      color: #555;
+      text-align: right;
+    }
+
+    footer {
+      display: flex;
+      padding: 8px;
+      border-top: 1px solid #ddd;
+      gap: 5px;
+    }
+
     footer input { flex: 1; }
 
     @media (max-width: 600px) {
@@ -38,6 +84,7 @@
 </head>
 <body>
 
+<!-- LOGIN / REGISTER -->
 <div class="auth" id="auth">
   <h2>Register / Login</h2>
   <input id="username" placeholder="Username" />
@@ -46,8 +93,9 @@
   <button onclick="login()">Login</button>
 </div>
 
+<!-- CHAT -->
 <div class="chat" id="chat">
-  <header id="chatHeader">Chat</header>
+  <header>Mini WhatsApp</header>
   <input id="chatUser" placeholder="Chat with username" />
   <div class="messages" id="messages"></div>
   <footer>
@@ -57,57 +105,73 @@
 </div>
 
 <script>
-  // 🔥 Firebase config (REPLACE with your own)
+  // 🔥 YOUR FIREBASE CONFIG
   const firebaseConfig = {
     apiKey: "AIzaSyAaXRb6M7siNeQI1OAy1W9DULuuDDX8CDg",
     authDomain: "chat-4b38b.firebaseapp.com",
     projectId: "chat-4b38b",
-    storageBucket: "chat-4b38b.firebasestorage.app",
+    storageBucket: "chat-4b38b.appspot.com",
     messagingSenderId: "656059272540",
-    appId: "1:656059272540:web:0d5ec37ab2ca12c145c599",
-    measurementId: "G-Q0MND4DPFN"
+    appId: "1:656059272540:web:0d5ec37ab2ca12c145c599"
   };
 
   firebase.initializeApp(firebaseConfig);
+
   const auth = firebase.auth();
   const db = firebase.firestore();
 
-  const authDiv = document.getElementById('auth');
-  const chatDiv = document.getElementById('chat');
-  const messagesDiv = document.getElementById('messages');
+  // DOM elements
+  const authDiv = document.getElementById("auth");
+  const chatDiv = document.getElementById("chat");
+  const messagesDiv = document.getElementById("messages");
 
-  let currentUser;
-  let unsubscribe;
+  const usernameInput = document.getElementById("username");
+  const passwordInput = document.getElementById("password");
+  const chatUserInput = document.getElementById("chatUser");
+  const messageInput = document.getElementById("messageInput");
 
+  let currentUser = null;
+  let unsubscribe = null;
+
+  // AUTH STATE
   auth.onAuthStateChanged(user => {
     if (user) {
-      currentUser = user.email.split('@')[0];
-      authDiv.style.display = 'none';
-      chatDiv.style.display = 'flex';
+      currentUser = user.email.split("@")[0];
+      authDiv.style.display = "none";
+      chatDiv.style.display = "flex";
     } else {
-      authDiv.style.display = 'block';
-      chatDiv.style.display = 'none';
+      authDiv.style.display = "block";
+      chatDiv.style.display = "none";
     }
   });
 
+  // REGISTER
   function register() {
-    const u = username.value;
-    const p = password.value;
-    auth.createUserWithEmailAndPassword(u + '@chat.com', p);
+    const u = usernameInput.value.trim();
+    const p = passwordInput.value;
+    if (!u || !p) return alert("Enter username & password");
+
+    auth.createUserWithEmailAndPassword(u + "@chat.com", p)
+      .catch(err => alert(err.message));
   }
 
+  // LOGIN
   function login() {
-    const u = username.value;
-    const p = password.value;
-    auth.signInWithEmailAndPassword(u + '@chat.com', p);
+    const u = usernameInput.value.trim();
+    const p = passwordInput.value;
+    if (!u || !p) return alert("Enter username & password");
+
+    auth.signInWithEmailAndPassword(u + "@chat.com", p)
+      .catch(err => alert(err.message));
   }
 
+  // SEND MESSAGE
   function sendMessage() {
-    const to = chatUser.value;
-    const text = messageInput.value;
+    const to = chatUserInput.value.trim();
+    const text = messageInput.value.trim();
     if (!to || !text) return;
 
-    db.collection('messages').add({
+    db.collection("messages").add({
       from: currentUser,
       to,
       text,
@@ -115,32 +179,53 @@
       seen: false
     });
 
-    messageInput.value = '';
+    messageInput.value = "";
   }
 
-  chatUser.addEventListener('change', () => {
+  // LOAD CHAT
+  chatUserInput.addEventListener("change", () => {
     if (unsubscribe) unsubscribe();
 
-    unsubscribe = db.collection('messages')
-      .where('from', 'in', [currentUser, chatUser.value])
-      .where('to', 'in', [currentUser, chatUser.value])
-      .orderBy('time')
+    const otherUser = chatUserInput.value.trim();
+    if (!otherUser) return;
+
+    unsubscribe = db.collection("messages")
+      .orderBy("time")
       .onSnapshot(snapshot => {
-        messagesDiv.innerHTML = '';
+        messagesDiv.innerHTML = "";
+
         snapshot.forEach(doc => {
           const m = doc.data();
-          const div = document.createElement('div');
-          div.className = 'msg ' + (m.from === currentUser ? 'me' : 'other');
-          div.innerHTML = `<b>${m.from}</b><br>${m.text}<div class="time">${m.time?.toDate().toLocaleTimeString()} ${m.seen ? '✓✓' : '✓'}</div>`;
+
+          const isChat =
+            (m.from === currentUser && m.to === otherUser) ||
+            (m.from === otherUser && m.to === currentUser);
+
+          if (!isChat) return;
+
+          const div = document.createElement("div");
+          div.className = "msg " + (m.from === currentUser ? "me" : "other");
+
+          div.innerHTML = `
+            <b>${m.from}</b><br>
+            ${m.text}
+            <div class="time">
+              ${m.time ? m.time.toDate().toLocaleTimeString() : ""}
+              ${m.from === currentUser ? (m.seen ? "✓✓" : "✓") : ""}
+            </div>
+          `;
+
           messagesDiv.appendChild(div);
 
           if (m.to === currentUser && !m.seen) {
             doc.ref.update({ seen: true });
           }
         });
+
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
       });
   });
 </script>
+
 </body>
 </html>
