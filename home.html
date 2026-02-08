@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Mini WhatsApp</title>
+<title>Mini WhatsApp Base</title>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -11,6 +11,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
+/* ===== RESET ===== */
 * {
   box-sizing: border-box;
   font-family: Arial, sans-serif;
@@ -21,21 +22,21 @@ body {
   background: #ece5dd;
 }
 
-/* SCREENS */
+/* ===== SCREENS ===== */
 .screen {
   display: none;
   flex-direction: column;
   height: 100vh;
   max-width: 500px;
   margin: auto;
-  background: #fff;
+  background: #ffffff;
 }
 
 .screen.active {
   display: flex;
 }
 
-/* AUTH */
+/* ===== AUTH ===== */
 #auth {
   padding: 20px;
 }
@@ -44,19 +45,11 @@ input, button {
   width: 100%;
   padding: 10px;
   margin: 6px 0;
-  background: #fff;
-  color: #000;
   border: 1px solid #ccc;
   font-size: 16px;
 }
 
-button {
-  background: #075e54;
-  color: #fff;
-  border: none;
-}
-
-/* HEADER */
+/* ===== HEADER ===== */
 header {
   background: #075e54;
   color: white;
@@ -66,7 +59,7 @@ header {
   align-items: center;
 }
 
-/* CHAT LIST */
+/* ===== CHAT LIST ===== */
 #chats {
   flex: 1;
   overflow-y: auto;
@@ -78,24 +71,11 @@ header {
   cursor: pointer;
 }
 
-.chat-item:hover {
-  background: #f5f5f5;
-}
-
-.chat-name {
-  font-weight: bold;
-}
-
-.chat-last {
-  font-size: 13px;
-  color: #555;
-}
-
-/* CHAT SCREEN */
+/* ===== CHAT ===== */
 #messages {
   flex: 1;
-  overflow-y: auto;
   padding: 10px;
+  overflow-y: auto;
   background: #e5ddd5;
 }
 
@@ -104,7 +84,6 @@ header {
   padding: 8px 12px;
   margin: 5px 0;
   border-radius: 10px;
-  word-wrap: break-word;
 }
 
 .me {
@@ -113,10 +92,10 @@ header {
 }
 
 .them {
-  background: #fff;
+  background: #ffffff;
 }
 
-/* FOOTER — DRAFT FIX IS HERE */
+/* ===== FOOTER INPUT (FIXED) ===== */
 footer {
   display: flex;
   padding: 10px;
@@ -128,23 +107,19 @@ footer input {
   padding: 10px;
   border-radius: 20px;
   border: 1px solid #ccc;
-  background: #ffffff;
-  color: #000000;
   font-size: 16px;
-  z-index: 10;
 }
 
 footer button {
   margin-left: 8px;
   padding: 10px 16px;
   border-radius: 50%;
+  border: none;
   background: #25d366;
   color: white;
-  border: none;
-  cursor: pointer;
 }
 
-/* MENU */
+/* ===== MENU ===== */
 #menu {
   position: absolute;
   top: 55px;
@@ -152,18 +127,10 @@ footer button {
   background: #fff;
   border: 1px solid #ccc;
   display: none;
-  z-index: 1000;
+  z-index: 999;
 }
 
-#menu div {
-  padding: 10px;
-  cursor: pointer;
-}
-
-#menu div:hover {
-  background: #eee;
-}
-
+/* 🔥 NUCLEAR DRAFT FIX 🔥 */
 input,
 textarea {
   -webkit-text-fill-color: #000000 !important;
@@ -172,7 +139,6 @@ textarea {
   caret-color: #000000 !important;
   opacity: 1 !important;
 }
-
 </style>
 </head>
 <body>
@@ -198,14 +164,14 @@ textarea {
 <!-- CHAT SCREEN -->
 <div id="chatScreen" class="screen">
   <header>
-    <span onclick="goBack()" style="cursor:pointer">⬅ <span id="chatWith"></span></span>
-    <span onclick="toggleMenu()" style="cursor:pointer">⋮</span>
+    <span onclick="goBack()">⬅ <span id="chatWith"></span></span>
+    <span onclick="toggleMenu()">⋮</span>
   </header>
 
   <div id="messages"></div>
 
   <footer>
-    <input id="msgInput" placeholder="Type a message…" />
+    <input id="msgInput" type="text" autocomplete="off" spellcheck="false" placeholder="Type a message…" />
     <button onclick="sendMsg()">➤</button>
   </footer>
 
@@ -216,7 +182,7 @@ textarea {
 </div>
 
 <script>
-/* FIREBASE CONFIG */
+/* FIREBASE */
 firebase.initializeApp({
   apiKey: "AIzaSyAaXRb6M7siNeQI1OAy1W9DULuuDDX8CDg",
   authDomain: "chat-4b38b.firebaseapp.com",
@@ -254,13 +220,13 @@ function login() {
   ).catch(e => alert(e.message));
 }
 
-/* SCREEN SWITCH */
+/* UI */
 function show(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 }
 
-/* LOAD CHAT LIST */
+/* CHAT LIST */
 function loadChats() {
   db.collection("messages").orderBy("time")
     .onSnapshot(snap => {
@@ -276,8 +242,7 @@ function loadChats() {
       Object.keys(users).forEach(u => {
         const div = document.createElement("div");
         div.className = "chat-item";
-        div.innerHTML = `<div class="chat-name">${u}</div>
-                         <div class="chat-last">${users[u].text}</div>`;
+        div.textContent = u + ": " + users[u].text;
         div.onclick = () => openChat(u);
         chats.appendChild(div);
       });
@@ -287,7 +252,7 @@ function loadChats() {
 /* OPEN CHAT */
 function openChat(user) {
   currentChat = user;
-  chatWith.innerText = user;
+  chatWith.textContent = user;
   show("chatScreen");
   loadMessages();
 }
@@ -338,7 +303,7 @@ function clearChat() {
     .where("from", "in", [currentUser, currentChat])
     .where("to", "in", [currentUser, currentChat])
     .get()
-    .then(snap => snap.forEach(d => d.ref.delete()));
+    .then(s => s.forEach(d => d.ref.delete()));
 }
 
 function deleteChat() {
