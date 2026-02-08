@@ -28,6 +28,14 @@ input, button {
   margin: 6px 0;
   width: 100%;
   border: 1px solid #ccc;
+  background: #fff;
+  color: #000;
+}
+
+button {
+  background: #075e54;
+  color: #fff;
+  border: none;
 }
 
 header {
@@ -40,10 +48,7 @@ header {
   align-items: center;
 }
 
-.plus {
-  font-size: 22px;
-  cursor: pointer;
-}
+.plus { font-size: 22px; cursor: pointer; }
 
 .chats {
   overflow-y: auto;
@@ -56,24 +61,11 @@ header {
   cursor: pointer;
 }
 
-.chat-item:hover {
-  background: #f5f5f5;
-}
+.chat-item:hover { background: #f5f5f5; }
 
-.chat-name {
-  font-weight: bold;
-}
-
-.chat-last {
-  font-size: 13px;
-  color: #555;
-}
-
-.chat-time {
-  font-size: 11px;
-  color: #888;
-  float: right;
-}
+.chat-name { font-weight: bold; }
+.chat-last { font-size: 13px; color: #555; }
+.chat-time { font-size: 11px; color: #888; float: right; }
 
 .chat-screen {
   display: none;
@@ -93,6 +85,7 @@ header {
   margin: 6px 0;
   border-radius: 8px;
   max-width: 75%;
+  word-wrap: break-word;
 }
 
 .me { background: #dcf8c6; margin-left: auto; }
@@ -109,6 +102,9 @@ footer input {
   flex: 1;
   border-radius: 20px;
   padding-left: 15px;
+  background: #fff;
+  color: #000;
+  border: 1px solid #ccc;
 }
 </style>
 </head>
@@ -162,40 +158,49 @@ firebase.initializeApp(firebaseConfig);
 const authFB = firebase.auth();
 const db = firebase.firestore();
 
+const authDiv = document.getElementById("auth");
+const appDiv = document.getElementById("app");
+const chatsDiv = document.getElementById("chats");
+const chatList = document.getElementById("chatList");
+const chatScreen = document.getElementById("chatScreen");
+const chatWith = document.getElementById("chatWith");
+const messagesDiv = document.getElementById("messages");
+const messageInput = document.getElementById("messageInput");
+
 let currentUser = "";
 let currentChat = "";
 let unsubMessages = null;
 
-/* AUTH */
+/* AUTH STATE */
 authFB.onAuthStateChanged(user => {
   if (user) {
     currentUser = user.email.split("@")[0];
-    auth.style.display = "none";
-    app.style.display = "block";
+    authDiv.style.display = "none";
+    appDiv.style.display = "block";
     loadChats();
   }
 });
 
-/* LOGIN / REGISTER */
+/* REGISTER / LOGIN */
 function register() {
   authFB.createUserWithEmailAndPassword(
     username.value + "@chat.com",
     password.value
-  );
+  ).catch(e => alert(e.message));
 }
+
 function login() {
   authFB.signInWithEmailAndPassword(
     username.value + "@chat.com",
     password.value
-  );
+  ).catch(e => alert(e.message));
 }
 
 /* LOAD CHAT LIST */
 function loadChats() {
-  db.collection("messages")
-    .orderBy("time")
+  db.collection("messages").orderBy("time")
     .onSnapshot(snapshot => {
-      chats.innerHTML = "";
+      chatsDiv.innerHTML = "";
       const users = {};
 
       snapshot.forEach(doc => {
@@ -218,7 +223,7 @@ function loadChats() {
           <div class="chat-last">${m.text}</div>
         `;
         div.onclick = () => openChat(u);
-        chats.appendChild(div);
+        chatsDiv.appendChild(div);
       });
     });
 }
@@ -236,10 +241,9 @@ function openChat(user) {
 function loadMessages() {
   if (unsubMessages) unsubMessages();
 
-  unsubMessages = db.collection("messages")
-    .orderBy("time")
+  unsubMessages = db.collection("messages").orderBy("time")
     .onSnapshot(snapshot => {
-      messages.innerHTML = "";
+      messagesDiv.innerHTML = "";
       snapshot.forEach(doc => {
         const m = doc.data();
         if (
@@ -249,14 +253,10 @@ function loadMessages() {
           const div = document.createElement("div");
           div.className = "msg " + (m.from === currentUser ? "me" : "other");
           div.innerText = m.text;
-          messages.appendChild(div);
-
-          if (m.to === currentUser && !m.seen) {
-            doc.ref.update({ seen: true });
-          }
+          messagesDiv.appendChild(div);
         }
       });
-      messages.scrollTop = messages.scrollHeight;
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
     });
 }
 
@@ -267,13 +267,12 @@ function sendMessage() {
     from: currentUser,
     to: currentChat,
     text: messageInput.value,
-    time: firebase.firestore.FieldValue.serverTimestamp(),
-    seen: false
+    time: firebase.firestore.FieldValue.serverTimestamp()
   });
   messageInput.value = "";
 }
 
-/* PLUS BUTTON */
+/* NEW CHAT */
 function startNewChat() {
   const u = prompt("Enter username");
   if (u) openChat(u);
