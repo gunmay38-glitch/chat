@@ -1,90 +1,126 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mini WhatsApp Clone</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mini WhatsApp Clone</title>
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!-- Firebase compat SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-  <style>
-    * { box-sizing: border-box; font-family: Arial, sans-serif; }
-    body { margin: 0; background: #ece5dd; }
+<style>
+* {
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
 
-    .auth, .chat {
-      max-width: 500px;
-      margin: auto;
-      height: 100vh;
-      background: #fff;
-      display: none;
-      flex-direction: column;
-    }
+body {
+  margin: 0;
+  background: #ece5dd;
+}
 
-    .auth { padding: 20px; }
+/* AUTH + CHAT CONTAINER */
+.auth, .chat {
+  max-width: 500px;
+  margin: auto;
+  height: 100vh;
+  background: #fff;
+  display: none;
+  flex-direction: column;
+}
 
-    input, button {
-      padding: 10px;
-      margin: 8px 0;
-      width: 100%;
-    }
+/* AUTH */
+.auth {
+  padding: 20px;
+}
 
-    header {
-      background: #075e54;
-      color: white;
-      padding: 12px;
-      text-align: center;
-      font-weight: bold;
-    }
+/* INPUT FIX (IMPORTANT) */
+input, button {
+  padding: 10px;
+  margin: 8px 0;
+  width: 100%;
+  color: #000;            /* FIX */
+  background: #fff;       /* FIX */
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
 
-    .messages {
-      flex: 1;
-      padding: 10px;
-      overflow-y: auto;
-    }
+/* HEADER */
+header {
+  background: #075e54;
+  color: white;
+  padding: 12px;
+  text-align: center;
+  font-weight: bold;
+}
 
-    .msg {
-      margin: 6px 0;
-      padding: 8px;
-      border-radius: 8px;
-      max-width: 75%;
-      word-wrap: break-word;
-    }
+/* MESSAGES */
+.messages {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  background: #e5ddd5;
+}
 
-    .me {
-      background: #dcf8c6;
-      margin-left: auto;
-    }
+.msg {
+  margin: 6px 0;
+  padding: 8px;
+  border-radius: 8px;
+  max-width: 75%;
+  word-wrap: break-word;
+}
 
-    .other {
-      background: #f1f0f0;
-    }
+.me {
+  background: #dcf8c6;
+  margin-left: auto;
+}
 
-    .time {
-      font-size: 10px;
-      color: #555;
-      text-align: right;
-    }
+.other {
+  background: #fff;
+}
 
-    footer {
-      display: flex;
-      padding: 8px;
-      border-top: 1px solid #ddd;
-      gap: 5px;
-    }
+.time {
+  font-size: 10px;
+  color: #555;
+  text-align: right;
+}
 
-    footer input { flex: 1; }
+/* FOOTER */
+footer {
+  display: flex;
+  padding: 8px;
+  border-top: 1px solid #ddd;
+  gap: 6px;
+  background: #f0f0f0;
+}
 
-    @media (max-width: 600px) {
-      .auth, .chat { max-width: 100%; }
-    }
-  </style>
+footer input {
+  flex: 1;
+  border-radius: 20px;
+  padding-left: 15px;
+}
+
+footer button {
+  width: auto;
+  border-radius: 20px;
+  background: #075e54;
+  color: white;
+  border: none;
+}
+
+/* MOBILE */
+@media (max-width: 600px) {
+  .auth, .chat {
+    max-width: 100%;
+  }
+}
+</style>
 </head>
 <body>
 
-<!-- LOGIN / REGISTER -->
+<!-- AUTH -->
 <div class="auth" id="auth">
   <h2>Register / Login</h2>
   <input id="username" placeholder="Username" />
@@ -105,127 +141,106 @@
 </div>
 
 <script>
-  // 🔥 YOUR FIREBASE CONFIG
-  const firebaseConfig = {
-    apiKey: "AIzaSyAaXRb6M7siNeQI1OAy1W9DULuuDDX8CDg",
-    authDomain: "chat-4b38b.firebaseapp.com",
-    projectId: "chat-4b38b",
-    storageBucket: "chat-4b38b.appspot.com",
-    messagingSenderId: "656059272540",
-    appId: "1:656059272540:web:0d5ec37ab2ca12c145c599"
-  };
+/* 🔥 FIREBASE CONFIG */
+const firebaseConfig = {
+  apiKey: "AIzaSyAaXRb6M7siNeQI1OAy1W9DULuuDDX8CDg",
+  authDomain: "chat-4b38b.firebaseapp.com",
+  projectId: "chat-4b38b",
+  storageBucket: "chat-4b38b.appspot.com",
+  messagingSenderId: "656059272540",
+  appId: "1:656059272540:web:0d5ec37ab2ca12c145c599"
+};
 
-  firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
 
-  const auth = firebase.auth();
-  const db = firebase.firestore();
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-  // DOM elements
-  const authDiv = document.getElementById("auth");
-  const chatDiv = document.getElementById("chat");
-  const messagesDiv = document.getElementById("messages");
+const authDiv = document.getElementById("auth");
+const chatDiv = document.getElementById("chat");
+const messagesDiv = document.getElementById("messages");
 
-  const usernameInput = document.getElementById("username");
-  const passwordInput = document.getElementById("password");
-  const chatUserInput = document.getElementById("chatUser");
-  const messageInput = document.getElementById("messageInput");
+let currentUser = null;
+let unsubscribe = null;
 
-  let currentUser = null;
-  let unsubscribe = null;
+/* AUTH STATE */
+auth.onAuthStateChanged(user => {
+  if (user) {
+    currentUser = user.email.split("@")[0];
+    authDiv.style.display = "none";
+    chatDiv.style.display = "flex";
+  } else {
+    authDiv.style.display = "block";
+    chatDiv.style.display = "none";
+  }
+});
 
-  // AUTH STATE
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      currentUser = user.email.split("@")[0];
-      authDiv.style.display = "none";
-      chatDiv.style.display = "flex";
-    } else {
-      authDiv.style.display = "block";
-      chatDiv.style.display = "none";
-    }
+/* REGISTER */
+function register() {
+  const u = username.value.trim();
+  const p = password.value.trim();
+  if (!u || !p) return alert("Fill all fields");
+  auth.createUserWithEmailAndPassword(u + "@chat.com", p)
+    .catch(err => alert(err.message));
+}
+
+/* LOGIN */
+function login() {
+  const u = username.value.trim();
+  const p = password.value.trim();
+  auth.signInWithEmailAndPassword(u + "@chat.com", p)
+    .catch(err => alert(err.message));
+}
+
+/* SEND MESSAGE */
+function sendMessage() {
+  const to = chatUser.value.trim();
+  const text = messageInput.value.trim();
+  if (!to || !text) return;
+
+  db.collection("messages").add({
+    from: currentUser,
+    to,
+    text,
+    time: firebase.firestore.FieldValue.serverTimestamp(),
+    seen: false
   });
 
-  // REGISTER
-  function register() {
-    const u = usernameInput.value.trim();
-    const p = passwordInput.value;
-    if (!u || !p) return alert("Enter username & password");
+  messageInput.value = "";
+}
 
-    auth.createUserWithEmailAndPassword(u + "@chat.com", p)
-      .catch(err => alert(err.message));
-  }
+/* LOAD CHAT */
+chatUser.addEventListener("change", () => {
+  if (unsubscribe) unsubscribe();
 
-  // LOGIN
-  function login() {
-    const u = usernameInput.value.trim();
-    const p = passwordInput.value;
-    if (!u || !p) return alert("Enter username & password");
+  unsubscribe = db.collection("messages")
+    .where("from", "in", [currentUser, chatUser.value])
+    .where("to", "in", [currentUser, chatUser.value])
+    .orderBy("time")
+    .onSnapshot(snapshot => {
+      messagesDiv.innerHTML = "";
+      snapshot.forEach(doc => {
+        const m = doc.data();
+        const div = document.createElement("div");
+        div.className = "msg " + (m.from === currentUser ? "me" : "other");
 
-    auth.signInWithEmailAndPassword(u + "@chat.com", p)
-      .catch(err => alert(err.message));
-  }
+        const time = m.time ? m.time.toDate().toLocaleTimeString() : "";
 
-  // SEND MESSAGE
-  function sendMessage() {
-    const to = chatUserInput.value.trim();
-    const text = messageInput.value.trim();
-    if (!to || !text) return;
+        div.innerHTML = `
+          <b>${m.from}</b><br>
+          ${m.text}
+          <div class="time">${time} ${m.seen ? "✓✓" : "✓"}</div>
+        `;
 
-    db.collection("messages").add({
-      from: currentUser,
-      to,
-      text,
-      time: firebase.firestore.FieldValue.serverTimestamp(),
-      seen: false
-    });
+        messagesDiv.appendChild(div);
 
-    messageInput.value = "";
-  }
-
-  // LOAD CHAT
-  chatUserInput.addEventListener("change", () => {
-    if (unsubscribe) unsubscribe();
-
-    const otherUser = chatUserInput.value.trim();
-    if (!otherUser) return;
-
-    unsubscribe = db.collection("messages")
-      .orderBy("time")
-      .onSnapshot(snapshot => {
-        messagesDiv.innerHTML = "";
-
-        snapshot.forEach(doc => {
-          const m = doc.data();
-
-          const isChat =
-            (m.from === currentUser && m.to === otherUser) ||
-            (m.from === otherUser && m.to === currentUser);
-
-          if (!isChat) return;
-
-          const div = document.createElement("div");
-          div.className = "msg " + (m.from === currentUser ? "me" : "other");
-
-          div.innerHTML = `
-            <b>${m.from}</b><br>
-            ${m.text}
-            <div class="time">
-              ${m.time ? m.time.toDate().toLocaleTimeString() : ""}
-              ${m.from === currentUser ? (m.seen ? "✓✓" : "✓") : ""}
-            </div>
-          `;
-
-          messagesDiv.appendChild(div);
-
-          if (m.to === currentUser && !m.seen) {
-            doc.ref.update({ seen: true });
-          }
-        });
-
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        if (m.to === currentUser && !m.seen) {
+          doc.ref.update({ seen: true });
+        }
       });
-  });
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+});
 </script>
-
 </body>
 </html>
