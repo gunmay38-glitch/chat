@@ -5,23 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Mini WhatsApp Clone</title>
 
-<!-- Firebase compat SDKs -->
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-* {
-  box-sizing: border-box;
-  font-family: Arial, sans-serif;
-}
+* { box-sizing: border-box; font-family: Arial, sans-serif; }
+body { margin: 0; background: #ece5dd; }
 
-body {
-  margin: 0;
-  background: #ece5dd;
-}
-
-/* AUTH + CHAT CONTAINER */
 .auth, .chat {
   max-width: 500px;
   margin: auto;
@@ -31,23 +23,18 @@ body {
   flex-direction: column;
 }
 
-/* AUTH */
-.auth {
-  padding: 20px;
-}
+.auth { padding: 20px; }
 
-/* INPUT FIX (IMPORTANT) */
 input, button {
   padding: 10px;
   margin: 8px 0;
   width: 100%;
-  color: #000;            /* FIX */
-  background: #fff;       /* FIX */
+  color: #000;
+  background: #fff;
   border: 1px solid #ccc;
   font-size: 16px;
 }
 
-/* HEADER */
 header {
   background: #075e54;
   color: white;
@@ -56,7 +43,6 @@ header {
   font-weight: bold;
 }
 
-/* MESSAGES */
 .messages {
   flex: 1;
   padding: 10px;
@@ -72,14 +58,8 @@ header {
   word-wrap: break-word;
 }
 
-.me {
-  background: #dcf8c6;
-  margin-left: auto;
-}
-
-.other {
-  background: #fff;
-}
+.me { background: #dcf8c6; margin-left: auto; }
+.other { background: #fff; }
 
 .time {
   font-size: 10px;
@@ -87,7 +67,6 @@ header {
   text-align: right;
 }
 
-/* FOOTER */
 footer {
   display: flex;
   padding: 8px;
@@ -110,11 +89,8 @@ footer button {
   border: none;
 }
 
-/* MOBILE */
 @media (max-width: 600px) {
-  .auth, .chat {
-    max-width: 100%;
-  }
+  .auth, .chat { max-width: 100%; }
 }
 </style>
 </head>
@@ -141,7 +117,6 @@ footer button {
 </div>
 
 <script>
-/* 🔥 FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyAaXRb6M7siNeQI1OAy1W9DULuuDDX8CDg",
   authDomain: "chat-4b38b.firebaseapp.com",
@@ -156,10 +131,6 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-const authDiv = document.getElementById("auth");
-const chatDiv = document.getElementById("chat");
-const messagesDiv = document.getElementById("messages");
-
 let currentUser = null;
 let unsubscribe = null;
 
@@ -167,41 +138,39 @@ let unsubscribe = null;
 auth.onAuthStateChanged(user => {
   if (user) {
     currentUser = user.email.split("@")[0];
-    authDiv.style.display = "none";
-    chatDiv.style.display = "flex";
+    auth.style.display = "none";
+    chat.style.display = "flex";
   } else {
-    authDiv.style.display = "block";
-    chatDiv.style.display = "none";
+    auth.style.display = "block";
+    chat.style.display = "none";
   }
 });
 
 /* REGISTER */
 function register() {
-  const u = username.value.trim();
-  const p = password.value.trim();
-  if (!u || !p) return alert("Fill all fields");
-  auth.createUserWithEmailAndPassword(u + "@chat.com", p)
-    .catch(err => alert(err.message));
+  if (!username.value || !password.value) return alert("Fill fields");
+  auth.createUserWithEmailAndPassword(
+    username.value + "@chat.com",
+    password.value
+  ).catch(e => alert(e.message));
 }
 
 /* LOGIN */
 function login() {
-  const u = username.value.trim();
-  const p = password.value.trim();
-  auth.signInWithEmailAndPassword(u + "@chat.com", p)
-    .catch(err => alert(err.message));
+  auth.signInWithEmailAndPassword(
+    username.value + "@chat.com",
+    password.value
+  ).catch(e => alert(e.message));
 }
 
-/* SEND MESSAGE */
+/* SEND */
 function sendMessage() {
-  const to = chatUser.value.trim();
-  const text = messageInput.value.trim();
-  if (!to || !text) return;
+  if (!chatUser.value || !messageInput.value) return;
 
   db.collection("messages").add({
     from: currentUser,
-    to,
-    text,
+    to: chatUser.value,
+    text: messageInput.value,
     time: firebase.firestore.FieldValue.serverTimestamp(),
     seen: false
   });
@@ -209,36 +178,46 @@ function sendMessage() {
   messageInput.value = "";
 }
 
-/* LOAD CHAT */
+/* LOAD FULL HISTORY (FIXED) */
 chatUser.addEventListener("change", () => {
   if (unsubscribe) unsubscribe();
 
+  const other = chatUser.value;
+  if (!other) return;
+
   unsubscribe = db.collection("messages")
-    .where("from", "in", [currentUser, chatUser.value])
-    .where("to", "in", [currentUser, chatUser.value])
     .orderBy("time")
     .onSnapshot(snapshot => {
-      messagesDiv.innerHTML = "";
+      messages.innerHTML = "";
+
       snapshot.forEach(doc => {
         const m = doc.data();
+
+        const isChat =
+          (m.from === currentUser && m.to === other) ||
+          (m.from === other && m.to === currentUser);
+
+        if (!isChat) return;
+
         const div = document.createElement("div");
         div.className = "msg " + (m.from === currentUser ? "me" : "other");
 
-        const time = m.time ? m.time.toDate().toLocaleTimeString() : "";
-
         div.innerHTML = `
-          <b>${m.from}</b><br>
           ${m.text}
-          <div class="time">${time} ${m.seen ? "✓✓" : "✓"}</div>
+          <div class="time">
+            ${m.time ? m.time.toDate().toLocaleTimeString() : ""}
+            ${m.from === currentUser ? (m.seen ? "✓✓" : "✓") : ""}
+          </div>
         `;
 
-        messagesDiv.appendChild(div);
+        messages.appendChild(div);
 
         if (m.to === currentUser && !m.seen) {
           doc.ref.update({ seen: true });
         }
       });
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+      messages.scrollTop = messages.scrollHeight;
     });
 });
 </script>
